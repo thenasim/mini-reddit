@@ -12,6 +12,9 @@ export class Post {
   @Field(() => String)
   updatedAt: String;
 
+  @Field()
+  userId: number;
+
   @Field(() => String)
   title: String;
 }
