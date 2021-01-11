@@ -1,9 +1,24 @@
 import { MyContext } from "../types";
 import { Post } from "../schemas/Post";
-import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  FieldResolver,
+  Mutation,
+  Query,
+  Resolver,
+  Root,
+} from "type-graphql";
+import { User } from "../schemas/User";
 
-@Resolver()
+@Resolver(Post)
 export class PostResolver {
+  // ? Field Resolver
+  @FieldResolver(() => User)
+  async user(@Root() post: Post, @Ctx() { prisma }: MyContext) {
+    return await prisma.user.findUnique({ where: { id: post.userId } });
+  }
+
   @Query(() => [Post])
   async posts(@Ctx() { prisma }: MyContext) {
     return await prisma.post.findMany();
