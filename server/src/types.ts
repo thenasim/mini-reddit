@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { Request, Response } from "express";
 
 export type MyContext = {
   prisma: PrismaClient<
@@ -7,4 +8,6 @@ export type MyContext = {
     },
     never
   >;
+  req: Request & { session: { userId?: number } };
+  res: Response;
 };

@@ -1,9 +1,11 @@
-import { PrismaClient } from "@prisma/client";
 import express from "express";
+import session from "express-session";
+import { PrismaClient } from "@prisma/client";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
+import { MyContext } from "./types";
 
 const prisma = new PrismaClient({
   log: ["query"],
@@ -12,12 +14,27 @@ const prisma = new PrismaClient({
 async function main() {
   const app = express();
 
+  app.use(
+    session({
+      name: "qid",
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 day
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+      },
+      saveUninitialized: false,
+      resave: false,
+      secret: "FJj4_88_asfF",
+    })
+  );
+
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [PostResolver, UserResolver],
       validate: false,
     }),
-    context: () => ({ prisma }),
+    context: ({ req, res }): MyContext => ({ prisma, req, res }),
   });
 
   apolloServer.applyMiddleware({ app });
