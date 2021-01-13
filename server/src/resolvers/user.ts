@@ -9,6 +9,7 @@ import {
   InputType,
   Mutation,
   ObjectType,
+  Query,
   Resolver,
 } from "type-graphql";
 
@@ -52,10 +53,20 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() { req, prisma }: MyContext) {
+    // you are not logged in
+    if (!req.session.userId) {
+      return null;
+    }
+
+    return await prisma.user.findUnique({ where: { id: req.session.userId } });
+  }
+
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: RegisterInput,
-    @Ctx() { prisma }: MyContext
+    @Ctx() { prisma, req }: MyContext
   ) {
     const check = await validate(options);
 
@@ -93,13 +104,18 @@ export class UserResolver {
       },
     });
 
+    // Store user id session
+    // this will set a cookie on the browser
+    // keep them logged in
+    req.session.userId = user.id;
+
     return { user };
   }
 
   @Mutation(() => UserResponse)
   async login(
     @Arg("options") options: LoginInput,
-    @Ctx() { prisma }: MyContext
+    @Ctx() { prisma, req }: MyContext
   ) {
     const user = await prisma.user.findUnique({
       where: { username: options.username },
@@ -117,6 +133,8 @@ export class UserResolver {
         errors: [{ field: "password", message: "password doesn't match" }],
       };
     }
+
+    req.session.userId = user.id;
 
     return { user };
   }
