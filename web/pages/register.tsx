@@ -2,34 +2,28 @@ import React from "react";
 import { Form, Formik } from "formik";
 import Wrapper from "../components/Wrapper";
 import InputField from "../components/InputField";
-import { useMutation } from "urql";
+import { useRegisterMutation } from "../generated/graphql";
+import { toErrorMap } from "../utils/toErrorMap";
+import { useRouter } from "next/router";
 
 interface Props {}
 
-const REGISTER_MUT = `
-mutation Register($username: String!, $password: String!, $name: String!) {
-  register (options: {username: $username, password: $password, name: $name}) {
-    errors {
-      field
-      message
-    }
-    user {
-      id
-      name
-      username
-    }
-  }
-}`;
-
 const Register: React.FC<Props> = () => {
-  const [, register] = useMutation(REGISTER_MUT);
+  const router = useRouter();
+  const [, register] = useRegisterMutation();
 
   return (
     <Wrapper>
       <Formik
         initialValues={{ username: "", password: "", name: "" }}
-        onSubmit={async (values) => {
+        onSubmit={async (values, { setErrors }) => {
           const response = await register(values);
+          if (response.data?.register.errors) {
+            setErrors(toErrorMap(response.data.register.errors));
+          } else if (response.data?.register.user) {
+            // worked
+            router.push("/");
+          }
         }}
       >
         {({ isSubmitting }) => (
@@ -42,7 +36,6 @@ const Register: React.FC<Props> = () => {
               placeholder="full name"
               autoComplete="none"
               className="block w-full p-3 mt-2 text-gray-700 bg-gray-200 appearance-none focus:outline-none focus:bg-gray-300 focus:shadow-inner"
-              required
             />
             <InputField
               label="Username"
@@ -52,7 +45,6 @@ const Register: React.FC<Props> = () => {
               placeholder="your username"
               autoComplete="none"
               className="block w-full p-3 mt-2 text-gray-700 bg-gray-200 appearance-none focus:outline-none focus:bg-gray-300 focus:shadow-inner"
-              required
             />
             <InputField
               label="Password"
@@ -62,7 +54,6 @@ const Register: React.FC<Props> = () => {
               placeholder="********"
               autoComplete="none"
               className="block w-full p-3 mt-2 text-gray-700 bg-gray-200 appearance-none focus:outline-none focus:bg-gray-300 focus:shadow-inner"
-              required
             />
             <button
               type="submit"
