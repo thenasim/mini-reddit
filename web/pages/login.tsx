@@ -2,26 +2,26 @@ import React from "react";
 import { Form, Formik } from "formik";
 import Wrapper from "../components/Wrapper";
 import InputField from "../components/InputField";
-import { useRegisterMutation } from "../generated/graphql";
+import { useLoginMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
 interface Props {}
 
-const Register: React.FC<Props> = () => {
+const Login: React.FC<Props> = () => {
   const router = useRouter();
-  const [, register] = useRegisterMutation();
+  const [, register] = useLoginMutation();
 
   return (
     <Wrapper>
       <Formik
-        initialValues={{ username: "", password: "", name: "" }}
+        initialValues={{ username: "", password: "" }}
         onSubmit={async (values, { setErrors }) => {
           const response = await register(values);
-          if (response.data?.register.errors) {
-            setErrors(toErrorMap(response.data.register.errors));
-          } else if (response.data?.register.user) {
+          if (response.data?.login.errors) {
+            setErrors(toErrorMap(response.data.login.errors));
+          } else if (response.data?.login.user) {
             // worked
             router.push("/");
           }
@@ -29,15 +29,6 @@ const Register: React.FC<Props> = () => {
       >
         {({ isSubmitting }) => (
           <Form className="mt-6">
-            <InputField
-              label="Full Name"
-              id="name"
-              type="text"
-              name="name"
-              placeholder="full name"
-              autoComplete="none"
-              className="block w-full p-3 mt-2 text-gray-700 bg-gray-200 appearance-none focus:outline-none focus:bg-gray-300 focus:shadow-inner"
-            />
             <InputField
               label="Username"
               id="username"
@@ -60,12 +51,12 @@ const Register: React.FC<Props> = () => {
               type="submit"
               className="w-full py-3 mt-6 font-medium tracking-widest text-white uppercase bg-black shadow-lg focus:outline-none hover:bg-gray-900 hover:shadow-none"
             >
-              {isSubmitting ? "....." : "Sign up"}
+              {isSubmitting ? "....." : "Login"}
             </button>
             <p className="flex justify-between mt-4 text-xs text-gray-500">
-              Already registered?
-              <Link href="/login">
-                <a>Login</a>
+              Don't have an account?{" "}
+              <Link href="/register">
+                <a>Register</a>
               </Link>
             </p>
           </Form>
@@ -75,4 +66,4 @@ const Register: React.FC<Props> = () => {
   );
 };
 
-export default Register;
+export default Login;
