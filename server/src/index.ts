@@ -1,5 +1,6 @@
 import express from "express";
 import session from "express-session";
+import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -13,6 +14,13 @@ const prisma = new PrismaClient({
 
 async function main() {
   const app = express();
+
+  app.use(
+    cors({
+      origin: "http://localhost:3000",
+      credentials: true,
+    })
+  );
 
   app.use(
     session({
@@ -37,7 +45,10 @@ async function main() {
     context: ({ req, res }): MyContext => ({ prisma, req, res }),
   });
 
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({
+    app,
+    cors: false,
+  });
 
   app.listen(4000, () => console.log(`http://localhost:4000`));
 }
